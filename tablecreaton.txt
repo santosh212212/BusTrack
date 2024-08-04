@@ -1,0 +1,317 @@
+create table SchoolMst(
+schoolautoid int identity(1,1),
+schoolid varchar(100) not null,
+schoolName varchar(100) not null,
+schoollocation varchar(1000) not null,
+isactive varchar(10),
+createdby varchar(100),
+createdon date,
+updatedby varchar(100),
+updatedon date
+);
+CREATE CLUSTERED INDEX indSchMstid
+ON SchoolMst(schoolid);
+
+create table SchoolBusMst(
+Busautoid int identity(1,1),
+schoolid varchar(100) not null,
+Driverid varchar(30) not null,
+BusNo varchar(50) not null,
+BusName varchar(100) not null,
+DriverName varchar(100) not null,
+isactive varchar(10),
+createdby varchar(100),
+createdon date,
+updatedby varchar(100),
+updatedon date,
+mobileno varchar(30) not null
+);
+CREATE CLUSTERED INDEX indSchBusMstDriverid
+ON SchoolBusMst(Driverid);
+CREATE NonCLUSTERED INDEX indSchBusMstBusNo
+ON SchoolBusMst(BusNo);
+
+create table SchoolParentMst(
+Parentautoid int identity(1,1),
+schoolid varchar(100) not null,
+Parentid varchar(50) not null,
+ParentName varchar(100) not null,
+ParentLocation varchar(1000) not null,
+locationhashvalue int not null,
+isactive varchar(10),
+createdby varchar(100),
+createdon date,
+updatedby varchar(100),
+updatedon date,
+deviceid varchar(200),
+mobileno varchar(30) not null
+);
+CREATE CLUSTERED INDEX indSchParMstParid
+ON SchoolParentMst(Parentid);
+CREATE NonCLUSTERED INDEX indSchParMsthasval
+ON SchoolParentMst(locationhashvalue);
+
+
+create table SchoolParBusMap(
+Parbusautoid int identity(1,1),
+schoolid varchar(100) not null,
+BusNo varchar(50) not null,
+Parentid varchar(100) not null,
+isactive varchar(10),
+createdby varchar(100),
+createdon date,
+updatedby varchar(100),
+updatedon date
+);
+CREATE NonCLUSTERED INDEX indSchParBusMapBusno
+ON SchoolParBusMap(BusNo);
+CREATE NonCLUSTERED INDEX indSchParBusMapParid
+ON SchoolParBusMap(Parentid);
+
+
+create table SchoolBusLatlng(
+Driverid varchar(50) not null,
+lat decimal not null,
+lng decimal not null,
+createdon date
+);
+CREATE NonCLUSTERED INDEX indSchBuslatlngDriverid
+ON SchoolBusLatlng(Driverid);
+-----------------------------------
+CREATE PROCEDURE PrcinsSchoolMst
+@schoolid varchar(100)
+           ,@schoolName varchar(100)
+           ,@schoollocation varchar(1000)
+           ,@isactive varchar(10)
+           ,@createdby varchar(100)
+		   ,@isinsert int
+          
+AS
+BEGIN
+if(@isinsert=1) 
+INSERT INTO [dbo].[SchoolMst]
+           (schoolid
+           ,schoolName
+           ,schoollocation
+           ,isactive
+           ,createdby
+           ,createdon
+           )
+     VALUES
+           (@schoolid 
+           ,@schoolName 
+           ,@schoollocation 
+           ,@isactive 
+           ,@createdby 
+           ,GETDATE()
+           )
+		   else
+		   UPDATE [dbo].[SchoolMst]
+   SET [schoolName] = @schoolName
+      ,[schoollocation] = @schoollocation
+      ,[isactive] = @isactive
+      ,[updatedby] = @createdby
+      ,[updatedon] = Getdate()
+ WHERE schoolid=@schoolid
+		   
+END
+
+CREATE PROCEDURE PrcinsSchoolBusMst
+@schoolid varchar(100) 
+           ,@Driverid varchar(30) 
+           ,@BusNo varchar(50) 
+           ,@BusName varchar(100) 
+           ,@DriverName varchar(100) 
+           ,@isactive varchar(10) 
+           ,@createdby varchar(100) 
+           ,@mobileno varchar(30) 
+		   ,@isinsert int
+          
+AS
+BEGIN
+if(@isinsert=1) 
+INSERT INTO [dbo].[SchoolBusMst]
+           ([schoolid]
+           ,[Driverid]
+           ,[BusNo]
+           ,[BusName]
+           ,[DriverName]
+           ,[isactive]
+           ,[createdby]
+           ,[createdon]
+           ,[mobileno])
+     VALUES
+           (
+		   @schoolid
+           ,@Driverid
+           ,@BusNo
+           ,@BusName
+           ,@DriverName
+           ,@isactive
+           ,@createdby
+           ,getdate()
+           ,@mobileno
+		   ) else
+		   UPDATE [dbo].[SchoolBusMst]
+   SET [schoolid] = @schoolid
+      ,[BusNo] = @BusNo
+      ,[BusName] = @BusName
+      ,[DriverName] = @DriverName
+      ,[isactive] = @isactive
+      ,[updatedby] = @createdby
+      ,[updatedon] = Getdate()
+      ,[mobileno] = @mobileno
+ WHERE Driverid = @Driverid;
+		   
+END;
+CREATE PROCEDURE PrcinsSchoolParentMst
+@schoolid varchar(100)
+           ,@Parentid varchar(50)
+           ,@ParentName varchar(100)
+           ,@ParentLocation varchar(1000)
+           ,@locationhashvalue int
+           ,@isactive varchar(10)
+           ,@createdby varchar(100)
+           ,@mobileno varchar(30)
+		   ,@isinsert int
+          
+AS
+BEGIN
+if(@isinsert=1) 
+INSERT INTO [dbo].[SchoolParentMst]
+           ([schoolid]
+           ,[Parentid]
+           ,[ParentName]
+           ,[ParentLocation]
+           ,[locationhashvalue]
+           ,[isactive]
+           ,[createdby]
+           ,[createdon]
+           ,[mobileno])
+     VALUES
+           (@schoolid 
+           ,@Parentid 
+           ,@ParentName
+           ,@ParentLocation 
+           ,@locationhashvalue 
+           ,@isactive 
+           ,@createdby 
+		   ,getdate()
+           ,@mobileno)
+
+
+ else
+		  UPDATE [dbo].[SchoolParentMst]
+   SET [schoolid] = @schoolid
+      ,[ParentName] = @ParentName
+      ,[ParentLocation] = @ParentLocation
+      ,[locationhashvalue] = @locationhashvalue
+      ,[isactive] = @isactive
+      ,[updatedby] = @createdby
+      ,[updatedon] = GETDATE()
+      ,[mobileno] = @mobileno
+ WHERE Parentid=@Parentid
+		   
+END;
+
+CREATE PROCEDURE PrcinsSchoolParentMap
+@schoolid varchar(100) 
+           ,@BusNo varchar(50) 
+           ,@Parentid varchar(100) 
+           ,@isactive varchar(10) 
+           ,@createdby varchar(100)
+		   ,@isinsert int
+          
+AS
+BEGIN
+if(@isinsert=1) 
+INSERT INTO [dbo].[SchoolParBusMap]
+           ([schoolid]
+           ,[BusNo]
+           ,[Parentid]
+           ,[isactive]
+           ,[createdby]
+           ,[createdon]
+           )
+     VALUES
+           (@schoolid 
+           ,@BusNo 
+           ,@Parentid 
+           ,@isactive 
+           ,@createdby
+		   ,Getdate()
+		   )
+ else
+		UPDATE [dbo].[SchoolParBusMap]
+   SET [schoolid] =  @schoolid
+      ,[BusNo] =  @BusNo
+      ,[Parentid] =  @Parentid
+      ,[isactive] =  @isactive
+      ,[updatedby] =  @createdby
+      ,[updatedon] =  getdate()
+ WHERE  Parentid=@Parentid and BusNo=@BusNo;
+		   
+END;
+
+CREATE PROCEDURE PrcinsSchoolBuslatlng
+@Driverid varchar(50) 
+            ,@lat decimal(18,0) 
+            ,@lng decimal(18,0) 
+AS
+BEGIN
+INSERT INTO [dbo].[SchoolBusLatlng]
+           ([Driverid]
+           ,[lat]
+           ,[lng]
+           ,[createdon])
+     VALUES
+           ( @Driverid 
+            ,@lat 
+            ,@lng
+			,getdate()
+            )
+		   
+END;
+
+CREATE PROCEDURE GetSchoolBuslatlng
+@Driverid varchar(50) 
+            
+AS
+BEGIN
+select  * from [dbo].[SchoolBusLatlng] t
+where t.Driverid=@Driverid and t.createdon=GETDATE()
+END;
+
+CREATE PROCEDURE SendSchoolParentnotificaton
+@BusNo varchar(50) ,
+@locationhashvalue int
+            
+AS
+BEGIN
+select  t.deviceid from [dbo].[SchoolParentMst] t
+inner join  [dbo].[SchoolParbusMap] m
+on m.Parentid=t.Parentid
+and m.BusNo=@BusNo and t.isactive='Y' and m.isactive='Y' and t.locationhashvalue=@locationhashvalue;
+END;
+
+CREATE PROCEDURE AuthUser
+@Userid varchar(50) ,
+@Type varchar(20)
+            
+AS
+BEGIN
+if(@Type='PARENT')
+select  t.mobileno from [dbo].[SchoolParentMst] t
+where t.Parentid=@Userid and t.isactive='Y';
+else if(@Type='DRIVER')
+select  t.mobileno from [dbo].[SchoolBusMst] t
+where t.Driverid=@Userid and t.isactive='Y';
+END;
+
+
+
+
+
+
+
+
